@@ -1,0 +1,50 @@
+#!/usr/bin/env python
+
+import sys,os,argparse
+import core,benchmarks
+
+def read_args():
+    
+    apps_list=['hpl','hpl-gpu','stream','stream-gpu','ior','nccl']
+    parser = argparse.ArgumentParser(prog='acceptpy',
+                                     description='acceptance test framework for a bare metal white cluster.')
+    parser.add_argument('--nodelist',required=True,
+                        type=str,help='List of comma separated hostnames as a single string.\nE.g. "ab123-[xx-yy]-c,ab456-xx-d,..."')
+    parser.add_argument('--app',choices=apps_list,nargs=1,
+                        help="takes the benchmark name as argument. Possible values are %s." %[x for x in apps_list])      
+    parser.add_argument('-e','--execute',action='store_true',
+                        help='execute selected benchmark')
+    parser.add_argument('-s','--status',action='store_true',
+                        help='Check status of the selected benchmark')
+    parser.add_argument('-k','--kill',action='store_true',
+                        help='kill processes on nodes launched by the selected benchmark')
+    parser.add_argument('-r','--report',action='store_true',
+                        help='gerenates report of the selected benchmark.')
+    parser.add_argument('-u','--utilization',action='store_true',
+                        help='captures utlization of CPU and Memory of the application process.')
+    args = parser.parse_args()
+    
+    if len(sys.argv) > 6:
+        sys.exit("No more than one optional argument can be passed in addition to the nodelist and benchmark application name.")
+    else:
+        return args
+
+
+
+if __name__ == '__main__':
+    args=read_args()
+    nodelist = core.create_nodelist(args.nodelist)
+    app_name=args.app[0]
+    print("Nodelist created:\n",nodelist)
+    if args.execute:
+        core.execute_procs(nodelist,app_name)
+    elif args.status:
+        core.status_procs(nodelist,app_name)
+    elif args.kill:
+        core.kill_procs(nodelist,app_name)  
+    elif args.report:
+        core.report_procs(nodelist,app_name)
+    elif args.utilization:
+        core.utilization(nodelist,app_name)
+
+
